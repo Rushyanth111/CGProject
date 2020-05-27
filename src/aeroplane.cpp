@@ -1,3 +1,4 @@
+#include "aeroplane.hpp"
 #include <GL/freeglut.h>
 #include "Utility.hpp"
 

@@ -7,6 +7,8 @@ set(SOURCES
     "src/Utility.cpp"
     "src/aeroplane.cpp"
     "src/CGProject.cpp"
+    "src/Background.cpp"
+    "src/Foreground.cpp"
 )
 
 include_directories(include)
