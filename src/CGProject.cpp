@@ -8,7 +8,7 @@
 #include "Foreground.hpp"
 #include "Background.hpp"
 #include "Objects.hpp"
-#define BLOCKSPEED 0.9f;
+#define BLOCKSPEED 1.0f;
 
 int SCREENH = 600, SCREENW = 800;
 
@@ -30,17 +30,21 @@ Cloud cloud_state;		 // cloud struct
 //-------------function prototypes------------------
 void keyPressed(unsigned char, int, int);
 void mouse(int button, int state, int x, int y);
+
 void buildingBlock();
 void CloudBlock();
-void init();
-void gameEnd();
-void welcome();
+
 bool cloudHit();
 bool buildingHit();
+bool boundHit();
+
+void welcome();
+void gameEnd();
+void PlayScreen();
+
 void printScore();
+void init();
 void display();
-void moveJetU();
-void moveJetD();
 
 //------------------ Object Makers:
 
@@ -98,15 +102,6 @@ void welcome()
 
 void PlayScreen()
 {
-	if ((int)score % 100 == 0 && lflag == true) // l-level
-	{
-		lflag = false;
-		level++;
-	}
-	else if ((int)score % 100 != 0 && lflag == false)
-	{
-		lflag = true;
-	}
 
 	glPushMatrix();
 	drawGameBackground();
@@ -116,7 +111,6 @@ void PlayScreen()
 	drawAeroplane(); //code for jet
 	glPopMatrix();
 
-	score += bspd;
 	if ((building_state.state == true && building_state.block_x < -10) || (cloud_state.state == true && cloud_state.block_x < -10)) // If Building or Could has gone outside the area.
 	{
 		srand(time(NULL));
@@ -133,13 +127,11 @@ void PlayScreen()
 
 	else if (building_state.state == true)
 	{
-		building_state.block_x -= bspd;
 		glTranslatef(building_state.block_x, 0.0, 0.0);
 		drawBuilding(building_state, buildColor);
 	}
 	else if (cloud_state.state == true)
 	{
-		cloud_state.block_x -= bspd;
 		glTranslatef(cloud_state.block_x, 0.0, 0.0);
 		drawCloud(cloud_state, buildColor);
 	}
@@ -208,22 +200,6 @@ bool boundHit()
 		return false;
 }
 
-void moveJetU() // jet moving up
-{
-	if (pause == false)
-	{
-		plane_mvmt = plane_mvmt + 1.0f;
-	}
-}
-
-void moveJetD() // jet moving down
-{
-	if (pause == false && gameEndStatus == false && welcome_flag == false)
-	{
-		plane_mvmt -= 0.5f;
-	}
-}
-
 void mouse(int button, int state, int x, int y) // takes input from mouse
 {
 	int mx = x * 100 / SCREENW, my = (SCREENH - y) * 100 / SCREENH; // m = mouse cordinate to graphics
@@ -238,13 +214,7 @@ void mouse(int button, int state, int x, int y) // takes input from mouse
 		{
 			welcome_flag = true;
 			gameEndStatus = false;
-			plane_mvmt = 0;
-			start = false;
 			init();
-			bspd = BLOCKSPEED; //restarting the game
-			score = 1;
-			level = 1;
-			glutPostRedisplay();
 		}
 	}
 	else if (welcome_flag == true)
@@ -290,7 +260,6 @@ void keyPressed(unsigned char key, int x, int y) // int x and y are mouse pos at
 void myReshape(int w, int h)
 {
 	SCREENH = h, SCREENW = w;
-	printf("width = %d\theight= %d", w, h);
 	glViewport(0, 0, w, h);
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
@@ -325,9 +294,13 @@ void display()
 
 void init()
 {
+	plane_mvmt = 10.0;
 	srand(time(0));
-	int random = rand() % 2;
-	if (random == 0)
+	bspd = BLOCKSPEED; //restarting the game
+	score = 1;
+	level = 1;
+
+	if (rand() % 2 == 0)
 	{
 		buildingBlock();
 	}
@@ -343,13 +316,32 @@ void update(int value)
 
 	if (start == true)
 	{
+		//LevelCounter
+		if ( ((int)score * 10) % 1000 == 0) // l-level
+		{
+			lflag = false;
+			level++;
+			bspd+=0.1f;
+		}
+
+		//Score Update
+		score += bspd;
+
+		//Objects Approching in the Foreground.
+		if (building_state.state == true)
+			building_state.block_x -= bspd;
+		else
+			cloud_state.block_x -= bspd;
+
 		//Movement Functions.
 		if (jetisUp)
-			moveJetU();
+			plane_mvmt = plane_mvmt + 1.0f;
 		else
-			moveJetD();
+			plane_mvmt -= 0.5f;
 
-		if(cloudHit() || buildingHit() || boundHit() ){ //Check for Collision Every frame
+		if (cloudHit() || buildingHit() || boundHit())
+		{ //Check for Collision Every frame
+			start = false;
 			gameEndStatus = true;
 		}
 	}
@@ -373,7 +365,7 @@ int main(int argc, char **argv)
 
 	glutDisplayFunc(display);
 	glutReshapeFunc(myReshape);
-	glutTimerFunc(1000 / 30, update, 0);
+	glutTimerFunc(1000 / 60, update, 0);
 	glutMouseFunc(mouse);
 	glutKeyboardFunc(keyPressed);
 	glutMainLoop();
