@@ -4,11 +4,12 @@ set(CXX_STANDARD 11)
 find_package(GLUT REQUIRED)
 
 set(SOURCES 
-    CGProject.cpp
-    Utility.h
-    Utility.cpp
+    "src/Utility.cpp"
+    "src/aeroplane.cpp"
+    "src/CGProject.cpp"
 )
 
+include_directories(include)
 include_directories(${GLUT_INCLUDE_DIRS})
 add_executable(graphicsdemo ${SOURCES})
 target_link_libraries(graphicsdemo PRIVATE GLUT::GLUT)

@@ -2,8 +2,8 @@
 #include<time.h>
 #include<stdio.h>
 #include<random>
-#include"Utility.h"
-#define BLOCKSPEED 0.02f
+#include"Utility.hpp"
+#define BLOCKSPEED 0.9f;
 
 int SCREENH = 600, SCREENW = 800;
 
@@ -30,6 +30,8 @@ char score_Str[20], slevel[20];   //score string and levelstring
 
 float score = 1;
 int level = 1; //Level and Score Counter
+
+bool jetisUp = false;
 
 color buildColor(randomGenF(), randomGenF(), randomGenF());
 building building_state;  // building struct
@@ -225,7 +227,7 @@ void PlayScreen() {
 	glPopMatrix();
 
 
-	score += 0.01;
+	score += bspd;
 	if ((building_state.state == true && building_state.block_x < -10) || (cloud_state.state == true && cloud_state.block_x < -10)) // If Building or Could has gone outside the area.
 	{
 		srand(time(NULL));
@@ -322,17 +324,16 @@ bool boundHit()
 void moveJetU()      // jet moving up
 {
 	if (pause == false) {
-		plane_mvmt += 0.05;
+		plane_mvmt = plane_mvmt + 1.0f;
 	}
-	glutPostRedisplay();
 }
 
 void moveJetD()          // jet moving down
 {
 	if (pause == false && gameEndStatus == false && welcome_flag == false)  {
-		plane_mvmt -= 0.05;
+		plane_mvmt -= 0.5f;
 	}
-	glutPostRedisplay();
+
 }
 
 void mouse(int button, int state, int x, int y)            // takes input from mouse
@@ -381,10 +382,10 @@ void mouse(int button, int state, int x, int y)            // takes input from m
 			if (button == GLUT_LEFT_BUTTON)
 			{
 				if (state == GLUT_DOWN)
-					glutIdleFunc(moveJetU);
+					jetisUp = true;
 
 				else if (state == GLUT_UP)
-					glutIdleFunc(moveJetD);
+					jetisUp = false;
 			}
 		}
 		
@@ -451,6 +452,20 @@ void init()
 
 }
 
+void update(int value){
+	//Timer Function to be called in 30s.
+
+	if(start == true){
+		if(jetisUp)
+			moveJetU();
+		else
+			moveJetD();
+	}
+	glutPostRedisplay();
+	glutTimerFunc(1000/60, update, value);
+}
+
+
 int main(int argc, char** argv)
 {
 	glutInit(&argc, argv);
@@ -467,6 +482,7 @@ int main(int argc, char** argv)
 	
 	glutDisplayFunc(display);
 	glutReshapeFunc(myReshape);
+	glutTimerFunc(1000/30, update, 0);
 	glutMouseFunc(mouse);
 	glutKeyboardFunc(keyPressed);
 	glutMainLoop();
