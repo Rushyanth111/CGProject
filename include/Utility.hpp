@@ -22,6 +22,7 @@ public:
 
 
 float randomGenF();
+int randomGeni();
 
 void drawRectGrad(float x1, float y1, float x2, float y2, color startColor , color midColor);
 void drawPoly(std::vector<float> x, std::vector<float> y, color givenColor, float alpha=1.0);

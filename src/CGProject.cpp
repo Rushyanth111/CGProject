@@ -2,6 +2,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <random>
+#include<iostream>
 
 #include "Utility.hpp"
 #include "aeroplane.hpp"
@@ -13,10 +14,10 @@
 int SCREENH = 600, SCREENW = 800;
 
 //-------------------declarations---------------
-float bspd = BLOCKSPEED;																	 // block speed
-bool pause = false, lflag = true, welcome_flag = true, gameEndStatus = false, start = false; //flags
-float plane_mvmt = 0.0;																		 //jet movement up or down
-char score_Str[20], slevel[20];																 //score string and levelstring
+float bspd = BLOCKSPEED;										 // block speed
+bool welcomeStatus = true, gameEndStatus = false, start = false; //flags
+float plane_mvmt = 0.0;											 //jet movement up or down
+char score_Str[20], slevel[20];									 //score string and levelstring
 
 float score = 1;
 int level = 1; //Level and Score Counter
@@ -51,7 +52,6 @@ void display();
 void buildingBlock()
 {
 	building_state.block_x = 50.0;
-	srand(time(0));
 	building_state.no_floors = rand() % 3 + 4;
 	buildColor = color(randomGenF(), randomGenF(), randomGenF());
 	building_state.block_y = building_state.no_floors * 10 + 15; // generate block y cordinate depending on no of floors
@@ -62,7 +62,6 @@ void buildingBlock()
 void CloudBlock()
 {
 	cloud_state.block_x = 50.0;
-	srand(time(0));
 	cloud_state.block_y = (rand() % 30) + 50; //randomly generate block y cordinate
 	cloud_state.state = true;
 	building_state.state = false;
@@ -113,7 +112,6 @@ void PlayScreen()
 
 	if ((building_state.state == true && building_state.block_x < -10) || (cloud_state.state == true && cloud_state.block_x < -10)) // If Building or Could has gone outside the area.
 	{
-		srand(time(NULL));
 		int random = rand() % 2; //for random building or cloud
 		if (random == 0)
 		{
@@ -202,29 +200,29 @@ bool boundHit()
 
 void mouse(int button, int state, int x, int y) // takes input from mouse
 {
+	//x and y are pixel states.
+
 	int mx = x * 100 / SCREENW, my = (SCREENH - y) * 100 / SCREENH; // m = mouse cordinate to graphics
 
-	/*		mouse calculation//converting to screen coordinates-ortho values
-	SCREENSIZE  ---->  ORTHO
-	x(reqd val) ---->  ???
-	*/
+	std::cout<< mx << " " << my << " " << x << " " << y << std::endl;
+
 	if (gameEndStatus == true)
 	{
 		if (mx > 40 && mx < 60 && my > 5 && my < 10) //Co-ordinates for the Button.
 		{
-			welcome_flag = true;
+			welcomeStatus = true;
 			gameEndStatus = false;
 			init();
 		}
 	}
-	else if (welcome_flag == true)
+	else if (welcomeStatus == true)
 	{
 		if (mx > 40 && mx < 60) //Line of Options:
 		{
 			if (my > 40 && my < 45) //Start
 			{
 				start = true;
-				welcome_flag = false;
+				welcomeStatus = false;
 			}
 			else if (my > 10 && my < 15) //Exit
 			{
@@ -254,7 +252,6 @@ void keyPressed(unsigned char key, int x, int y) // int x and y are mouse pos at
 	{
 		exit(0);
 	}
-	glutPostRedisplay();
 }
 
 void myReshape(int w, int h)
@@ -272,30 +269,26 @@ void display()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/*
-		(building_state.state == true && buildingHit() == true) || (boundHit() == true) ||
-		(cloud_state.state == true && cloudHit() == true))
-	*/
-	if (gameEndStatus == true)
-	{
-		gameEnd();
-	}
-	else if (welcome_flag == true) //Welcome Screen
+	if (welcomeStatus == true)
 	{
 		welcome();
+	}
+	else if (gameEndStatus == true) //Welcome Screen
+	{
+		gameEnd();
 	}
 	else
 	{
 		PlayScreen();
 	}
-	//glFlush();
+
 	glutSwapBuffers();
 }
 
 void init()
 {
-	plane_mvmt = 10.0;
 	srand(time(0));
+	plane_mvmt = 10.0;
 	bspd = BLOCKSPEED; //restarting the game
 	score = 1;
 	level = 1;
@@ -317,11 +310,10 @@ void update(int value)
 	if (start == true)
 	{
 		//LevelCounter
-		if ( ((int)score * 10) % 1000 == 0) // l-level
+		if (((int)score * 10) % 1000 == 0) // l-level
 		{
-			lflag = false;
 			level++;
-			bspd+=0.1f;
+			bspd += 0.1f;
 		}
 
 		//Score Update
@@ -356,8 +348,6 @@ int main(int argc, char **argv)
 	glutInitWindowSize(SCREENW, SCREENH);
 	glutInitWindowPosition(50, 50);
 	glutCreateWindow("Airplane Crash");
-	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);
-	glHint(GL_FOG, GL_NICEST);
 	glEnable(GL_LINE_SMOOTH);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glEnable(GL_BLEND);
